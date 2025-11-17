@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB0W9JoNcev8JNjxWQUXWGsAsm8Uq427Co&libraries=places"></script>
+</head>
+<body onload="initMap()">
+    <h1 class="text-center">Directions Route Finder</h1>
+     <br><br>
+     <div class="container">
+        <div class="form-group">
+            <input type="text" class="form-control" id="source" placeholder="Enter starting location">
+        </div> <br>
+        <div class="form-group">
+            <input type="text" class="form-control" id="dest" placeholder="Enter destination location">
+        </div>
+        <button class="btn btn-primary" onClick="getRoutes()">Get Directions</button>
+        <div id="map" style="height:500px;width:100%"></div>
+          <pre id="output"></pre>
+     </div>
+    
+</body>
+<script>
+    let map,directionsService,directionsRenderer;
+    let sourceautocomplete,destautocomplete;
+    function initMap(){
+        map = new google.maps.Map(document.getElementById("map"),{
+            center:{lat:37,lng:-122.4194},
+            zoom:5,
+        })
+        google.maps.event.addListener(map,'click',function(event){
+            this.setOptions({scrollwheel:true})
+        });
+        directionsService = new google.maps.DirectionsService();
+        directionsRenderer = new google.maps.DirectionsRenderer();
+        directionsRenderer.setMap(map);
+        sourceautocomplete = new google.maps.places.Autocomplete(document.getElementById("source"));
+        destautocomplete = new google.maps.places.Autocomplete(document.getElementById("dest"));
+    }
+    // function calcRoute(){
+    //     let source = document.getElementById("source").value;
+    //     let dest = document.getElementById("dest").value;
+    //     let request = {
+    //         origin:source,
+    //         destination:dest,
+    //         travelMode: 'DRIVING'
+    //     };
+    //     directionsService.route(request,function(result,status){
+    //         if(status == 'OK'){
+    //             directionsRenderer.setDirections(result);
+    //         }
+    //     });
+    // }
+
+  async function getRoutes() {
+    const origin = document.getElementById('source').value;
+    const destination = document.getElementById('dest').value;
+
+    const request = {
+      origin: origin,
+      destination: destination,
+      travelMode: google.maps.TravelMode.DRIVING,
+      provideRouteAlternatives: true,
+      drivingOptions: {
+        departureTime: new Date(), // current or future time
+        trafficModel: 'bestguess'
+      }
+    };
+
+    directionsService.route(request, (result, status) => {
+      if (status === 'OK') {
+        directionsRenderer.setDirections(result);
+
+        let output = "";
+        result.routes.forEach((route, i) => {
+          const leg = route.legs[0];
+          output += `Route ${i + 1} (${route.summary}):\n`;
+          output += `- Normal: ${leg.duration.text}\n`;
+          if (leg.duration_in_traffic) {
+            output += `- With Traffic: ${leg.duration_in_traffic.text}\n\n`;
+          } else {
+            output += `- With Traffic: Not available\n\n`;
+          }
+        });
+
+        document.getElementById("output").textContent = output;
+      } else {
+        document.getElementById("output").textContent = "Error: " + status;
+      }
+    });
+  }
+
+</script>
+</html>
